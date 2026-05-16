@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>easyTalk</title>
+    <link rel="icon" type="image/jpeg" href="logo.jpg">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="overlay">
+
+    <div class="emotes-container" id="emotes-container"></div>
+
+    <div class="overlay-container"
+        style="display: flex; justify-content: center; align-items: center; width: 100vw; height: 100vh; position: absolute; top: 0; left: 0;">
+        <div id="bubble-positioner"
+            style="position: relative; width: 0; height: 0; transform: translate(0vw, 0vh); transition: transform 0.3s ease;">
+            <div id="bubble-anchor" class="anchor-tail-left"
+                style="position: absolute; display: flex; width: max-content;">
+                <div class="speech-bubble tail-left" id="speech-bubble">
+                    <div class="typing-indicator" id="typing-indicator">
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                    </div>
+                    <div class="text-content" id="speech-text"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const bubble = document.getElementById('speech-bubble');
+        const textElement = document.getElementById('speech-text');
+        const emotesContainer = document.getElementById('emotes-container');
+        const bubblePositioner = document.getElementById('bubble-positioner');
+        const bubbleAnchor = document.getElementById('bubble-anchor');
+
+        // Apply saved settings on load
+        const savedTail = localStorage.getItem('tail_direction') || 'tail-left';
+        updateTailClass(savedTail);
+
+        const savedFontSize = localStorage.getItem('font_size') || '6';
+        document.documentElement.style.setProperty('--custom-font-size', savedFontSize + 'vmin');
+
+        const savedPosX = localStorage.getItem('pos_x') || '0';
+        const savedPosY = localStorage.getItem('pos_y') || '0';
+        bubblePositioner.style.transform = `translate(${savedPosX}vw, ${savedPosY}vh)`;
+
+        function updateTailClass(tailClass) {
+            bubble.className = bubble.className.replace(/tail-[a-z\-]+/g, '').trim();
+            bubble.classList.add(tailClass);
+
+            bubbleAnchor.className = bubbleAnchor.className.replace(/anchor-tail-[a-z\-]+/g, '').trim();
+            bubbleAnchor.classList.add('anchor-' + tailClass);
+        }
+
+        let hideBubbleTimeout;
+        let lastTimestamp = 0;
+        let isSpeaking = false;
+
+        // Initialize TTS Voices
+        let voices = [];
+        function loadVoices() {
+            voices = window.speechSynthesis.getVoices();
+        }
+        window.speechSynthesis.onvoiceschanged = loadVoices;
+        loadVoices(); // Initial load Attempt
+
+        const API_URL = window.location.protocol === 'file:' ? 'http://localhost:8080' : '';
+
+        async function pollEvents() {
+            try {
+                // Fetch initial config once if not loaded
+                if (!window.initialConfigLoaded) {
+                    const configRes = await fetch(`${API_URL}/api/config`);
+                    if (configRes.ok) {
+                        const data = await configRes.json();
+                        handleEvent({ type: 'config', data: {
+                            tail: data.tail_direction,
+                            fontSize: data.font_size,
+                            posX: data.pos_x,
+                            posY: data.pos_y,
+                            ttsVoice: data.tts_voice_name,
+                            ttsRate: data.tts_rate,
+                            ttsPitch: data.tts_pitch
+                        }});
+                        window.initialConfigLoaded = true;
+                    }
+                }
+
+                // Absolute URL to prevent CORS/file-loading issues, relative for network
+                const res = await fetch(`${API_URL}/api/event`);
+                if (res.ok) {
+                    const events = await res.json();
+                    for (let ev of events) {
+                        if (ev && ev.timestamp > lastTimestamp) {
+                            lastTimestamp = ev.timestamp;
+                            handleEvent(ev);
+                        }
+                    }
+                }
+            } catch (e) {
+                // Ignore, might be offline
+            }
+            setTimeout(pollEvents, 200); // Poll every 200ms
+        }
+
+        function handleEvent(ev) {
+            const { type, data } = ev;
+
+            if (type === 'typing') {
+                if (data.isTyping) {
+                    if (!isSpeaking) {
+                        bubble.classList.add('visible', 'typing');
+                    }
+                } else {
+                    if (bubble.classList.contains('typing')) {
+                        bubble.classList.remove('visible', 'typing');
+                    }
+                }
+            }
+            else if (type === 'tts') {
+                const textToSpeak = data.speakText !== undefined ? data.speakText : data.text;
+                const shouldSpeak = data.speak !== false;
+                speak(data.text, textToSpeak, shouldSpeak, data);
+            }
+            else if (type === 'emote') {
+                spawnEmote(data);
+            }
+            else if (type === 'config') {
+                if (data.tail) {
+                    localStorage.setItem('tail_direction', data.tail);
+                    updateTailClass(data.tail);
+                }
+                if (data.fontSize) {
+                    localStorage.setItem('font_size', data.fontSize);
+                    document.documentElement.style.setProperty('--custom-font-size', data.fontSize + 'vmin');
+                }
+                if (data.posX !== undefined && data.posY !== undefined) {
+                    localStorage.setItem('pos_x', data.posX);
+                    localStorage.setItem('pos_y', data.posY);
+                    bubblePositioner.style.transform = `translate(${data.posX}vw, ${data.posY}vh)`;
+                }
+                if (data.ttsVoice) localStorage.setItem('tts_voice_name', data.ttsVoice);
+                if (data.ttsRate) localStorage.setItem('tts_rate', data.ttsRate);
+                if (data.ttsPitch) localStorage.setItem('tts_pitch', data.ttsPitch);
+            }
+        }
+
+        function speak(displayText, speechText, shouldSpeak = true, data = {}) {
+            clearTimeout(hideBubbleTimeout);
+
+            // UI Update
+            bubble.classList.remove('typing');
+            textElement.textContent = displayText;
+            bubble.classList.add('visible');
+
+            if (shouldSpeak) {
+                isSpeaking = true;
+
+                // TTS
+                window.speechSynthesis.cancel(); // Cancel any ongoing speech
+                const utterance = new SpeechSynthesisUtterance(speechText);
+
+                // Garantizar que las voces estén cargadas
+                if (voices.length === 0) loadVoices();
+
+                // Config de voz (Prioridad: Evento > LocalStorage > Default)
+                const savedVoiceName = data.voice || localStorage.getItem('tts_voice_name');
+                const savedRate = data.rate || localStorage.getItem('tts_rate') || 1.1;
+                const savedPitch = data.pitch || localStorage.getItem('tts_pitch') || 1.2;
+
+                let selectedVoice = voices.find(v => v.name === savedVoiceName);
+                
+                // Fallback robusto por nombre (limpieza de caracteres y minúsculas)
+                if (!selectedVoice && savedVoiceName) {
+                    const clean = (s) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
+                    const target = clean(savedVoiceName);
+                    selectedVoice = voices.find(v => {
+                        const vName = clean(v.name);
+                        return vName.includes(target) || target.includes(vName);
+                    });
+                }
+
+                const esVoice = voices.find(v => v.lang.startsWith('es-')) || voices[0];
+                
+                utterance.voice = selectedVoice || esVoice;
+                utterance.rate = parseFloat(savedRate);
+                utterance.pitch = parseFloat(savedPitch);
+
+                utterance.onend = () => {
+                    isSpeaking = false;
+                    hideBubbleTimeout = setTimeout(() => {
+                        bubble.classList.remove('visible');
+                    }, 3000); 
+                };
+
+                window.speechSynthesis.speak(utterance);
+            } else {
+                // If not speaking, just hide the bubble after a bit
+                hideBubbleTimeout = setTimeout(() => {
+                    bubble.classList.remove('visible');
+                }, 5000);
+            }
+        }
+
+        function spawnEmote(data) {
+            clearTimeout(hideBubbleTimeout);
+
+            // Mostrar en el globo de texto como si fuera texto
+            bubble.classList.remove('typing');
+
+            textElement.innerHTML = `
+                <div style="text-align: center; display: flex; justify-content: center; width: 100%;">
+                    <img src="${data.file}" style="max-height: 15vmin; object-fit: contain;" 
+                        onerror="this.style.display='none'">
+                </div>
+            `;
+
+            bubble.classList.add('visible');
+
+            // Ocultar después de 3 segundos
+            hideBubbleTimeout = setTimeout(() => {
+                bubble.classList.remove('visible');
+            }, 3000);
+        }
+
+        // Start polling
+        pollEvents();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>easyTalk - Panel de Control</title>
+    <link rel="icon" type="image/jpeg" href="logo.jpg">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="control-panel">
+    <div class="dashboard">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+            <h1 style="margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.5px;">🎙️ easyTalk</h1>
+            <button onclick="saveAllSettings(this)" id="btn-save-top" style="padding: 10px 20px; background: var(--primary); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3); transition: 0.2s;">💾 Guardar Todo</button>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Texto a Voz (TTS) y Diálogo</div>
+            <div class="tts-controls">
+                <textarea id="tts-input" placeholder="Escribe aquí lo que quieres decir..."></textarea>
+                <div style="display: flex; gap: 10px;">
+                    <button id="btn-speak" class="btn-primary" style="flex: 1;" title="Enviar con voz (Enter)">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                            <path d="M19.07 4.93a10 10 10 0 0 1 0 14.14M15.54 8.46a5 5 5 0 0 1 0 7.07"></path>
+                        </svg>
+                        Hablar
+                    </button>
+                    <button id="btn-text-only" class="btn-primary"
+                        style="flex: 1; background: rgba(255,255,255,0.05); border: 1px solid var(--primary);"
+                        title="Enviar solo texto (Shift + Enter)">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                        </svg>
+                        Solo Texto
+                    </button>
+                </div>
+            </div>
+        </div>
+
+
+
+        <div class="section">
+            <div class="section-title">Ajustes Visuales</div>
+            <div style="display: flex; gap: 10px; flex-direction: column;">
+                <label style="color: #94a3b8; font-size: 14px;">Dirección de la flecha del globo:</label>
+                <select id="tail-direction"
+                    style="padding: 10px; border-radius: 8px; background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.1); cursor: pointer;">
+                    <option value="tail-left" style="color: black;">Izquierda (Medio)</option>
+                    <option value="tail-right" style="color: black;">Derecha (Medio)</option>
+                    <option value="tail-top" style="color: black;">Arriba (Centro)</option>
+                    <option value="tail-bottom" style="color: black;">Abajo (Centro)</option>
+                    <option value="tail-bottom-left" style="color: black;">Esquina Inferior Izquierda</option>
+                    <option value="tail-bottom-right" style="color: black;">Esquina Inferior Derecha</option>
+                    <option value="tail-top-left" style="color: black;">Esquina Superior Izquierda</option>
+                    <option value="tail-top-right" style="color: black;">Esquina Superior Derecha</option>
+                    <option value="tail-none" style="color: black;">Sin flecha (Oculta)</option>
+                </select>
+
+                <label style="color: #94a3b8; font-size: 14px; margin-top: 10px;">Tamaño del texto (Globo):</label>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <input type="range" id="font-size" min="2" max="15" step="0.5" value="6"
+                        style="flex: 1; cursor: pointer;">
+                    <span id="font-size-value"
+                        style="color: white; width: 30px; text-align: right; font-weight: bold;">6</span>
+                </div>
+
+                <label style="color: #94a3b8; font-size: 14px; margin-top: 10px;">Posición X (Horizontal):</label>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <input type="range" id="pos-x" min="-50" max="50" step="1" value="0"
+                        style="flex: 1; cursor: pointer;">
+                    <span id="pos-x-value"
+                        style="color: white; width: 40px; text-align: right; font-weight: bold;">0%</span>
+                </div>
+
+                <label style="color: #94a3b8; font-size: 14px; margin-top: 10px;">Posición Y (Vertical):</label>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <input type="range" id="pos-y" min="-50" max="50" step="1" value="0"
+                        style="flex: 1; cursor: pointer;">
+                    <span id="pos-y-value"
+                        style="color: white; width: 40px; text-align: right; font-weight: bold;">0%</span>
+                </div>
+
+                <small style="color: #64748b; font-size: 12px; margin-top: 5px;">Se actualizará en vivo en OBS.</small>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Frases Rápidas (Accesos Directos)</div>
+            <div class="hotkeys-list" id="hotkeys-list">
+                <!-- Se generan dinámicamente -->
+            </div>
+
+            <div style="margin-top: 15px; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px;">
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="new-phrase-input" placeholder="Nueva frase rápida..."
+                        style="flex: 1; padding: 8px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: white;">
+                    <button onclick="addNewPhrase()"
+                        style="padding: 8px 15px; border-radius: 4px; border: none; background: var(--primary); color: white; cursor: pointer; font-weight: bold;">Añadir</button>
+                </div>
+            </div>
+        </div>
+
+
+
+        <div class="section">
+            <div class="section-title">Rueda de Emotes</div>
+            <div class="emote-grid" id="emote-grid">
+                <!-- Se generan dinámicamente -->
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Añadir / Editar Emotes</div>
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                <div style="background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px;">
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <input type="text" id="new-emote-name" placeholder="Nombre (ej. GG)"
+                            style="flex: 1; min-width: 80px; padding: 8px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: white;">
+                        <input type="file" id="new-emote-file" accept="image/png, image/jpeg, image/gif, image/svg+xml"
+                            style="flex: 2; min-width: 150px; padding: 6px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: white;">
+                        <button onclick="addNewEmote()"
+                            style="padding: 8px 15px; border-radius: 4px; border: none; background: var(--primary); color: white; cursor: pointer; font-weight: bold;">Añadir</button>
+                    </div>
+                </div>
+                <div id="emote-management-list"
+                    style="display: flex; flex-direction: column; gap: 5px; max-height: 200px; overflow-y: auto; padding-right: 5px;">
+                    <!-- Se generan dinámicamente -->
+                </div>
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                    <button onclick="restoreDefaultEmotes()" style="padding: 8px; background: rgba(255,0,0,0.1); color: #ff8a8a; border: 1px solid rgba(255,0,0,0.2); border-radius: 4px; cursor: pointer; transition: 0.2s;">Restaurar Por Defecto</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">🎙️ Configuración de Voz (TTS)</div>
+            <div style="display: flex; flex-direction: column; gap: 15px;">
+                <div class="control-group">
+                    <label>Voz Seleccionada:</label>
+                    <select id="tts-voice-select"
+                        style="width: 100%; padding: 10px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: white; cursor: pointer;">
+                        <!-- Se llena dinámicamente -->
+                    </select>
+                    <style>
+                        #tts-voice-select option {
+                            background-color: #1e293b;
+                            color: white;
+                        }
+                    </style>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div class="control-group">
+                        <label>Velocidad: <span id="tts-rate-val">1.1</span></label>
+                        <input type="range" id="tts-rate" min="0.5" max="2" step="0.1" value="1.1" style="width:100%">
+                    </div>
+                    <div class="control-group">
+                        <label>Tono: <span id="tts-pitch-val">1.2</span></label>
+                        <input type="range" id="tts-pitch" min="0.5" max="2" step="0.1" value="1.2" style="width:100%">
+                    </div>
+                </div>
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                    <button onclick="testTTS()" style="width: 100%; padding: 10px; background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; cursor: pointer;">Probar Voz en OBS</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">⌨️ Atajo de Teclado (Global)</div>
+            <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px;">
+                <p style="color: #94a3b8; font-size: 12px; margin-bottom: 10px;">Define la tecla para abrir el menú (siempre se usará junto con la tecla <b>ALT</b>).</p>
+                <button id="hotkey-recorder" onclick="startHotkeyRecord()" 
+                    style="width: 100%; padding: 12px; border: 2px dashed rgba(99, 102, 241, 0.5); background: rgba(99, 102, 241, 0.1); color: #818cf8; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; font-size: 16px;">
+                    ALT + V
+                </button>
+            </div>
+        </div>
+
+        <button onclick="saveAllSettings(this)" id="btn-save-bottom" style="margin-top: 20px; width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 16px; box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3); transition: 0.2s;">Guardar Toda la Configuración</button>
+
+        <div
+            style="text-align: center; margin-top: 30px; color: #64748b; font-size: 13px; font-weight: 500; letter-spacing: 0.5px;">
+            Desarrollado por twitch.tv/garpaks y twitch.tv/AuroryaLeFay
+        </div>
+    </div>
+
+    <script>
+        const API_URL = window.location.protocol === 'file:' ? 'http://localhost:8080' : '';
+        const input = document.getElementById('tts-input');
+
+        // Indicate typing
+        let typingTimeout;
+        input.addEventListener('input', () => {
+            sendEvent('typing', { isTyping: true });
+
+            clearTimeout(typingTimeout);
+            typingTimeout = setTimeout(() => {
+                sendEvent('typing', { isTyping: false });
+            }, 1000);
+        });
+
+        // Send TTS on button click
+        document.getElementById('btn-speak').addEventListener('click', () => {
+            if (input.value.trim() !== '') {
+                sendTTS(input.value.trim(), true);
+                input.value = '';
+                sendEvent('typing', { isTyping: false });
+            }
+        });
+
+        document.getElementById('btn-text-only').addEventListener('click', () => {
+            if (input.value.trim() !== '') {
+                sendTTS(input.value.trim(), false);
+                input.value = '';
+                sendEvent('typing', { isTyping: false });
+            }
+        });
+
+        // Send TTS on Enter (Ctrl+Enter or Enter without Shift)
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                if (e.shiftKey) {
+                    document.getElementById('btn-text-only').click();
+                } else {
+                    document.getElementById('btn-speak').click();
+                }
+            }
+        });
+
+        function sendTTS(text, speak = true) {
+            sendEvent('tts', { 
+                text: text, 
+                speak: speak,
+                voice: voiceSelect.value,
+                rate: rateSlider.value,
+                pitch: pitchSlider.value
+            });
+        }
+
+        const DEFAULT_PHRASES = [
+            "¡Hola a todos, bienvenidos al stream!",
+            "¡Muchas gracias por ese follow!",
+            "Ya vuelvo, iré a buscar agua.",
+            "Chinga tu madre"
+        ];
+
+        let customPhrases = JSON.parse(localStorage.getItem('custom_phrases')) || DEFAULT_PHRASES;
+
+        function renderPhrases() {
+            const list = document.getElementById('hotkeys-list');
+            list.innerHTML = '';
+
+            customPhrases.forEach((phrase, index) => {
+                const item = document.createElement('div');
+                item.className = 'hotkey-item';
+                item.innerHTML = `
+                    <span style="flex: 1; margin-right: 10px;">${phrase}</span>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <button class="hotkey-btn" onclick="sendTTS('${phrase.replace(/'/g, "\\'")}')">Enviar</button>
+                        <button onclick="deletePhrase(${index})" style="background: transparent; border: none; color: #ff4a4a; cursor: pointer; font-size: 16px;">✖</button>
+                    </div>
+                `;
+                list.appendChild(item);
+            });
+
+            localStorage.setItem('custom_phrases', JSON.stringify(customPhrases));
+        }
+
+        function addNewPhrase() {
+            const input = document.getElementById('new-phrase-input');
+            const val = input.value.trim();
+            if (val) {
+                customPhrases.push(val);
+                input.value = '';
+                renderPhrases();
+            }
+        }
+
+        function deletePhrase(index) {
+            if (confirm("¿Borrar esta frase rápida?")) {
+                customPhrases.splice(index, 1);
+                renderPhrases();
+            }
+        }
+
+        renderPhrases();
+
+        const DEFAULT_EMOTES = [
+            { id: 'gg', name: 'GG', file: 'emotes/gg.png', fallback: '🎮' },
+            { id: 'love', name: 'Amor', file: 'emotes/love.png', fallback: '❤️' },
+            { id: 'cry', name: 'Lloro', file: 'emotes/cry.png', fallback: '😭' },
+            { id: 'hi', name: 'Hola', file: 'emotes/hi.png', fallback: '👋' },
+            { id: 'angry', name: 'Enojo', file: 'emotes/angry.png', fallback: '💢' },
+            { id: 'laugh', name: 'Risa', file: 'emotes/laugh.png', fallback: '😂' }
+        ];
+
+        let customEmotes = JSON.parse(localStorage.getItem('custom_emotes')) || DEFAULT_EMOTES;
+
+        function renderEmotes() {
+            const emoteGrid = document.getElementById('emote-grid');
+            const emoteList = document.getElementById('emote-management-list');
+
+            emoteGrid.innerHTML = '';
+            emoteList.innerHTML = '';
+
+            customEmotes.forEach((emote, index) => {
+                // Botón en la rueda principal
+                const btn = document.createElement('button');
+                btn.className = 'emote-btn';
+                btn.onclick = () => sendEvent('emote', { file: emote.file });
+                btn.innerHTML = `
+                    <img src="${emote.file}" alt="${emote.name}" onerror="this.style.display='none'" style="width: 48px; height: 48px; object-fit: contain;">
+                    <span>${emote.name}</span>
+                `;
+                emoteGrid.appendChild(btn);
+
+                // Elemento en la lista de gestión
+                const listItem = document.createElement('div');
+                listItem.style = "display: flex; justify-content: space-between; align-items: center; padding: 8px; background: rgba(255,255,255,0.05); border-radius: 4px;";
+                listItem.innerHTML = `
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <img src="${emote.file}" onerror="this.style.display='none'" style="width: 24px; height: 24px; object-fit: contain;">
+                        <span style="color: white; font-weight: bold; width: 60px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${emote.name}</span>
+                        <span style="color: #94a3b8; font-size: 12px; font-family: monospace;">${emote.file}</span>
+                    </div>
+                    <button onclick="deleteEmote(${index})" style="background: transparent; border: none; color: #ff4a4a; cursor: pointer; font-size: 16px; transition: transform 0.1s;">✖</button>
+                `;
+                emoteList.appendChild(listItem);
+            });
+
+            localStorage.setItem('custom_emotes', JSON.stringify(customEmotes));
+        }
+
+        function addNewEmote() {
+            const nameInput = document.getElementById('new-emote-name');
+            const fileInput = document.getElementById('new-emote-file');
+
+            if (!nameInput.value || !fileInput.files[0]) {
+                alert("Debes poner un nombre y seleccionar una imagen.");
+                return;
+            }
+
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+
+            reader.onload = async function (e) {
+                const base64Data = e.target.result;
+                const safeName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, '_');
+
+                try {
+                    // Subir archivo al servidor
+                    await fetch(`${API_URL}/api/upload`, {
+                        method: 'POST',
+                        body: JSON.stringify({ name: safeName, data: base64Data })
+                    });
+
+                    // Añadir a la lista
+                    customEmotes.push({
+                        id: 'custom_' + Date.now(),
+                        name: nameInput.value,
+                        file: 'emotes/' + safeName
+                    });
+
+                    nameInput.value = '';
+                    fileInput.value = '';
+
+                    renderEmotes();
+                } catch (err) {
+                    alert("Error subiendo la imagen al servidor. Asegúrate de reiniciar server.ps1");
+                    console.error(err);
+                }
+            };
+
+            reader.readAsDataURL(file);
+        }
+
+        function deleteEmote(index) {
+            if (confirm("¿Seguro que quieres borrar este emote?")) {
+                customEmotes.splice(index, 1);
+                renderEmotes();
+            }
+        }
+
+        function restoreDefaultEmotes() {
+            if (confirm("¿Restaurar los emotes por defecto? Se perderán los que hayas añadido.")) {
+                customEmotes = [...DEFAULT_EMOTES];
+                renderEmotes();
+            }
+        }
+
+        renderEmotes();
+
+        function sendEvent(type, data) {
+            fetch(`${API_URL}/api/event`, {
+                method: 'POST',
+                body: JSON.stringify({ type, data, timestamp: Date.now() })
+            }).catch(e => console.error("Error connecting to server. Make sure server.ps1 is running.", e));
+        }
+
+        const tailDirectionSelect = document.getElementById('tail-direction');
+        const fontSizeSlider = document.getElementById('font-size');
+        const fontSizeValue = document.getElementById('font-size-value');
+        const posXSlider = document.getElementById('pos-x');
+        const posYSlider = document.getElementById('pos-y');
+        const posXValue = document.getElementById('pos-x-value');
+        const posYValue = document.getElementById('pos-y-value');
+
+        const savedTail = localStorage.getItem('tail_direction') || 'tail-left';
+        tailDirectionSelect.value = savedTail;
+
+        const savedFontSize = localStorage.getItem('font_size') || '6';
+        fontSizeSlider.value = savedFontSize;
+        fontSizeValue.textContent = savedFontSize;
+
+        const savedPosX = localStorage.getItem('pos_x') || '0';
+        const savedPosY = localStorage.getItem('pos_y') || '0';
+        posXSlider.value = savedPosX;
+        posYSlider.value = savedPosY;
+        posXValue.textContent = savedPosX + '%';
+        posYValue.textContent = savedPosY + '%';
+
+        tailDirectionSelect.addEventListener('change', (e) => {
+            const val = e.target.value;
+            localStorage.setItem('tail_direction', val);
+            sendEvent('config', { tail: val });
+        });
+
+        fontSizeSlider.addEventListener('input', (e) => fontSizeValue.textContent = e.target.value);
+        fontSizeSlider.addEventListener('change', (e) => {
+            const val = e.target.value;
+            localStorage.setItem('font_size', val);
+            sendEvent('config', { fontSize: val });
+        });
+
+        posXSlider.addEventListener('input', (e) => posXValue.textContent = e.target.value + '%');
+        posYSlider.addEventListener('input', (e) => posYValue.textContent = e.target.value + '%');
+
+        function updatePosition() {
+            localStorage.setItem('pos_x', posXSlider.value);
+            localStorage.setItem('pos_y', posYSlider.value);
+            sendEvent('config', { posX: posXSlider.value, posY: posYSlider.value });
+        }
+
+        posXSlider.addEventListener('change', updatePosition);
+        posYSlider.addEventListener('change', updatePosition);
+
+        // TTS Voices
+        let voicesList = [];
+        const voiceSelect = document.getElementById('tts-voice-select');
+        const rateSlider = document.getElementById('tts-rate');
+        const pitchSlider = document.getElementById('tts-pitch');
+
+        function loadVoices() {
+            voicesList = window.speechSynthesis.getVoices();
+            if (voicesList.length === 0) {
+                setTimeout(loadVoices, 100);
+                return;
+            }
+            const currentVoice = localStorage.getItem('tts_voice_name');
+            voiceSelect.innerHTML = voicesList.map(v => 
+                `<option value="${v.name}" ${v.name === currentVoice ? 'selected' : ''}>${v.name} (${v.lang})</option>`
+            ).join('');
+        }
+
+        function testTTS() {
+            sendTTS("Probando la voz de easy Talk en O B S");
+        }
+        window.speechSynthesis.onvoiceschanged = loadVoices;
+        loadVoices();
+
+        rateSlider.oninput = () => { 
+            document.getElementById('tts-rate-val').textContent = rateSlider.value; 
+            resetTtsButton();
+        };
+        pitchSlider.oninput = () => { 
+            document.getElementById('tts-pitch-val').textContent = pitchSlider.value; 
+            resetTtsButton();
+        };
+
+        function resetTtsButton() {
+            const btn = document.getElementById('btn-save-tts');
+            if (btn && btn.textContent === "¡Guardado!") {
+                btn.textContent = "Guardar Ajustes de Voz";
+                btn.style.background = "";
+            }
+        }
+
+        voiceSelect.addEventListener('change', resetTtsButton);
+        rateSlider.addEventListener('change', resetTtsButton);
+        pitchSlider.addEventListener('change', resetTtsButton);
+
+        // Guardado físico en servidor
+        async function loadServerConfig() {
+            try {
+                const res = await fetch(`${API_URL}/api/config`);
+                const data = await res.json();
+
+                if (data.custom_phrases) {
+                    customPhrases = data.custom_phrases;
+                    localStorage.setItem('custom_phrases', JSON.stringify(customPhrases));
+                }
+                if (data.custom_emotes) {
+                    customEmotes = data.custom_emotes;
+                    localStorage.setItem('custom_emotes', JSON.stringify(customEmotes));
+                }
+                if (data.tail_direction) {
+                    localStorage.setItem('tail_direction', data.tail_direction);
+                    tailDirectionSelect.value = data.tail_direction;
+                }
+                if (data.font_size) {
+                    localStorage.setItem('font_size', data.font_size);
+                    fontSizeSlider.value = data.font_size;
+                    fontSizeValue.textContent = data.font_size;
+                }
+                if (data.pos_x) {
+                    localStorage.setItem('pos_x', data.pos_x);
+                    posXSlider.value = data.pos_x;
+                    posXValue.textContent = data.pos_x + '%';
+                }
+                if (data.pos_y) {
+                    localStorage.setItem('pos_y', data.pos_y);
+                    posYSlider.value = data.pos_y;
+                    posYValue.textContent = data.pos_y + '%';
+                }
+                if (data.tts_voice_name) {
+                    localStorage.setItem('tts_voice_name', data.tts_voice_name);
+                    loadVoices();
+                }
+                if (data.tts_rate) {
+                    rateSlider.value = data.tts_rate;
+                    document.getElementById('tts-rate-val').textContent = data.tts_rate;
+                }
+                if (data.tts_pitch) {
+                    pitchSlider.value = data.tts_pitch;
+                    document.getElementById('tts-pitch-val').textContent = data.tts_pitch;
+                }
+                if (data.hotkey) {
+                    selectedHotkey = data.hotkey;
+                    document.getElementById('hotkey-recorder').textContent = `ALT + ${selectedHotkey.keyName}`;
+                }
+
+                renderPhrases();
+                renderEmotes();
+
+                // Enviar al overlay
+                sendEvent('config', {
+                    tail: tailDirectionSelect.value,
+                    fontSize: fontSizeSlider.value,
+                    posX: posXSlider.value,
+                    posY: posYSlider.value,
+                    ttsVoice: data.tts_voice_name,
+                    ttsRate: data.tts_rate,
+                    ttsPitch: data.tts_pitch
+                });
+            } catch (e) {
+                console.log("Iniciando con configuración local.");
+            }
+        }
+
+        async function saveAllSettings(btn) {
+            const config = {
+                custom_phrases: customPhrases,
+                custom_emotes: customEmotes,
+                tail_direction: tailDirectionSelect.value,
+                font_size: fontSizeSlider.value,
+                pos_x: posXSlider.value,
+                pos_y: posYSlider.value,
+                tts_voice_name: voiceSelect.value,
+                tts_rate: rateSlider.value,
+                tts_pitch: pitchSlider.value,
+                hotkey: selectedHotkey
+            };
+
+            try {
+                await fetch(`${API_URL}/api/config`, {
+                    method: 'POST',
+                    body: JSON.stringify(config)
+                });
+
+                sendEvent('config', {
+                    tail: config.tail_direction,
+                    fontSize: config.font_size,
+                    posX: config.pos_x,
+                    posY: config.pos_y,
+                    ttsVoice: config.tts_voice_name,
+                    ttsRate: config.tts_rate,
+                    ttsPitch: config.tts_pitch
+                });
+
+                if (btn && btn.tagName === 'BUTTON') {
+                    const oldText = btn.textContent;
+                    btn.textContent = "¡Guardado!";
+                    btn.style.background = "#22c55e";
+                    setTimeout(() => {
+                        btn.textContent = oldText;
+                        btn.style.background = ""; // Restaurar estilo original
+                    }, 2000);
+                }
+            } catch (e) {
+                alert("Error guardando configuración.");
+            }
+        }
+
+        // Hotkey Recording
+        let isRecordingHotkey = false;
+        let selectedHotkey = { modifiers: 1, key: 86, keyName: 'V' }; // Default ALT+V
+
+        function startHotkeyRecord() {
+            const btn = document.getElementById('hotkey-recorder');
+            isRecordingHotkey = true;
+            btn.textContent = "¡Presiona una tecla!";
+            btn.style.borderColor = "#fbbf24";
+            btn.style.color = "#fbbf24";
+            btn.style.background = "rgba(251, 191, 36, 0.1)";
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if (isRecordingHotkey) {
+                e.preventDefault();
+                const key = e.keyCode;
+                const keyName = e.key.toUpperCase();
+                
+                // Ignorar teclas modificadoras solas
+                if (key === 16 || key === 17 || key === 18 || key === 91) return;
+
+                selectedHotkey = { modifiers: 1, key: key, keyName: keyName };
+                isRecordingHotkey = false;
+                
+                const btn = document.getElementById('hotkey-recorder');
+                btn.textContent = `ALT + ${keyName}`;
+                btn.style.borderColor = "rgba(99, 102, 241, 0.5)";
+                btn.style.color = "#818cf8";
+                btn.style.background = "rgba(99, 102, 241, 0.1)";
+                
+                saveAllSettings();
+            }
+        });
+
+        // Enviar config inicial
+        setTimeout(() => {
+            loadServerConfig();
+        }, 500);
+
+    </script>
+</body>
+</html>
