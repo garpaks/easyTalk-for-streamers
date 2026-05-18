@@ -1,6 +1,6 @@
-# 🎙️ easyTalk - Streaming Suite Premium
+# 🎙️ easyTalk - You don't want to talk?
 
-**easyTalk** es una herramienta todo-en-uno diseñada para streamers que quieren interactuar con su audiencia de forma visual y auditiva sin perder el foco en el juego. Incluye un sistema de Texto a Voz (TTS), emotes en pantalla y un menú invisible estilo overlay.
+**easyTalk** es una herramienta todo-en-uno diseñada para streamers que quieren interactuar con su audiencia de forma visual y auditiva sin perder el foco en el juego. Incluye un sistema de Texto a Voz (TTS), emotes en pantalla y un menú invisible estilo overlay. Ideal para streamers que se la pasan modo Vtuber y no quieren hablar con su voz real. 
 
 ---
 
